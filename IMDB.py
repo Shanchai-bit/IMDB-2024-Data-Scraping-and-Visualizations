@@ -2,36 +2,68 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns 
+import time
 from sqlalchemy import create_engine
 
+# Attempt to establish a database connection
+# Create an SQLAlchemy engine to connect to the MySQL database
 engine = create_engine("mysql+mysqldb://root:shan@localhost:3306/imdb_2024_genres")#root@localhost:3306
 try:
+    # Establish a connection
     conn = engine.connect()
+    # Execute SQL query and load data into a Pandas DataFrame
     df = pd.read_sql('SELECT * FROM imdb_2024_genres.`movie data`', conn)
+    
 except Exception as e:
+    # Handle database connection or query errors
     st.write("Error: ", e)
+    
 finally:
+    # Ensure the connection is closed properly to free up resources
     if conn:
         conn.close()
 
-Nav_session = st.sidebar.radio('IMDb Insights *2024*', ['Home', 'Genre Analysis', 'Duration Insights', 'Voting Trends', 'Rating distribution'])
+# Load and Display Brand Banner Image
+st.image('D:/Guvi_Project/IMDB_ST/Image/IMDb_BrandBanner_1920x425.jpg',use_container_width = True)
+
+# Create Tabs for Navigation
+tab1, tab2, tab3, tab4, tab5 = st.tabs(['Home', 'Genre Analysis', 'Duration Insights', 'Voting Trends', 'Rating distribution'])
+
 
 rating_avg = df.groupby('Genre')['Rating'].mean()
 voting_avg = df.groupby('Genre')['Votes'].mean()
 
-if Nav_session == 'Home':
-    st.image('D:/Guvi_Project/IMDB_ST/Image/IMDb_BrandBanner_1920x425.jpg',use_container_width = True)
+with tab1:
     st.header('IMDB 2024 Data Scraping and Visualizations')
     st.write("""This project focuses on extracting and analyzing movie data from IMDb for the year 2024. The task involves scraping data such as movie names, genres, ratings, voting counts, and durations from IMDb's 2024 movie list using Selenium. The data will then be organized genre-wise, saved as individual CSV files, and combined into a single dataset stored in an SQL database. Finally, the project will provide interactive visualizations and filtering functionality using Streamlit to answer key questions and allow users to customize their exploration of the dataset.""")
-
-    # Display the DataFrame
-    st.write("Here, click the button to view the data that are scrapped from the IMDb website.")
-    if st.button("cilck me 😊"):
-        st.dataframe(df, hide_index=True,use_container_width = True)
+    
+    st.subheader("Advanced title search")
+    
+    with st.form("my_form"):
+        select_genre = st.multiselect("Select the multiple genre:", df['Genre'].unique())
         
+        rating_start,rating_end = st.select_slider("Select the rating:", options=sorted(df['Rating'].unique()), value=(df['Rating'].min(), df['Rating'].max()))
+        
+        duration_start,duration_end = st.select_slider("Select the duartion:", options=sorted(df['Duration'].unique()), value=(df['Duration'].min(), df['Duration'].max()))
+        
+        voting_start,voting_end = st.select_slider("Select the voting:", options=sorted(df['Votes'].unique()), value=(df['Votes'].min(), df['Votes'].max()))
+        
+        #Applying filters
+        filtered_df = df[(df['Genre'].isin(select_genre)) & (df['Rating'] >= rating_start) & (df['Rating'] <= rating_end) & (df['Duration'] >= duration_start) & (df['Duration'] <= duration_end) & (df['Votes'] >= voting_start) & (df['Votes'] <= voting_end)]
+        
+        # Display the DataFrame
+        st.write("click the submit button for filtered dataframe:")
+        if st.form_submit_button("Submit"):
+            with st.status("Data fetched for you!!",expanded = True):
+                time.sleep(1)
+                st.dataframe(filtered_df, hide_index=True,use_container_width = True)
+                if filtered_df.empty:
+                    st.error('Oops!! No data found for the selected filters. Please try again with different filters.')
+                if filtered_df.shape[0] > 0:
+                    st.success('Successfully retrieved movies data for you!!!', icon="✅")
 
-elif Nav_session == 'Genre Analysis':
-    st.title('Genre Analysis')
+with tab2:
+    st.header('Genre Analysis')
     st.write("""Welcome! This page explores the distribution of movies across different genres, revealing which types of films dominate the industry.  The data, visualized in the chart below, clearly illustrates the popularity of certain genres while highlighting the underrepresentation of others. Dive in to see the trends and discover the fascinating landscape of movie genres.""")
     
     if 'Genre' in df.columns:
@@ -95,9 +127,9 @@ elif Nav_session == 'Genre Analysis':
                 st.write("The genres with the highest average voting counts is *Action*, followed by crime.")    
     else:
         st.write("The 'Genre' column does not exist in the dataset.")
-    
-elif Nav_session == 'Duration Insights':
-    st.title('Duration Insights')
+
+with tab3:
+    st.header('Duration Insights')
     st.write("""Welcome to our exploration of movie durations!  Have you ever wondered why some films feel just right while others drag on or end too quickly?  This page delves into the fascinating world of movie runtimes, examining how length impacts storytelling, audience engagement, and even the business of filmmaking.  From epic sagas to concise comedies, we'll uncover the trends, averages, and secrets behind how long movies really are.""")
     
     if 'Duration' in df.columns:
@@ -146,9 +178,9 @@ elif Nav_session == 'Duration Insights':
             st.write('4. "How to Make a Werewolf" garnered a modest 5.9 rating with 78 votes, while "Framed" received the lowest rating (4.8) and a moderate number of votes (67), suggesting mixed-to-negative reception from its viewers. Notably, all movies have a duration of 0, which likely indicates missing data rather than actual film length.')
     else:
         st.write("The 'Duration' column does not exist in the dataset.")
-    
-elif Nav_session == 'Voting Trends':
-    st.title('Voting Trends')
+
+with tab4:
+    st.header('Voting Trends')
     st.write("""Welcome to our hub for movie voting!  Your opinion matters.  Here, you can rate and review films, contributing to a collective voice that helps others discover great cinema and understand what resonates with audiences.  Explore our listings, cast your votes, and see how your favorites stack up against the rest.""")
     
     if 'Votes' in df.columns:
@@ -208,9 +240,9 @@ elif Nav_session == 'Voting Trends':
             st.write("5. **Big drop-off:** There's a huge difference in votes between the top genres and the bottom ones.") 
     else:
         st.write("The 'Votes' column does not exist in the dataset.")
-    
-elif Nav_session == 'Rating distribution':
-    st.title('Rating Distribution')
+
+with tab5:
+    st.header('Rating Distribution')
     st.write("""Welcome to our comprehensive guide to movie ratings!  Here, you'll find everything you need to know about how movies are rated, from understanding the different rating systems to exploring the impact ratings have on audiences and the film industry.  Dive into our resources and become a rating expert.""")
     
     if 'Rating' in df.columns:
@@ -266,6 +298,6 @@ elif Nav_session == 'Rating distribution':
             st.write("5. **Action is fifth:** Action movies are the fifth highest rated.")
     else:
         st.write("The 'Rating' column does not exist in the dataset.")
+
+
     
-else:
-    st.write("Error! Please select a valid option from the sidebar.")
