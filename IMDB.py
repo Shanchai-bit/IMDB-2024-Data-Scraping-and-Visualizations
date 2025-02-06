@@ -42,13 +42,13 @@ with tab1:
     
     st.subheader("Advanced title search")
     # Creating a form for filtering movie data
-    with st.form("my_form"):
+    with st.form("my_form",clear_on_submit=True,border=True):
         # Multi-select dropdown to choose multiple genres
         select_genre = st.multiselect("Select the multiple genre:", df['Genre'].unique())
         # Select slider to choose a range for movie ratings
         rating_start,rating_end = st.select_slider("Select the rating:", options=sorted(df['Rating'].unique()), value=(df['Rating'].min(), df['Rating'].max()))
         # Select slider to choose a range for movie duration
-        duration_start,duration_end = st.select_slider("Select the duartion:", options=sorted(df['Duration'].unique()), value=(df['Duration'].min(), df['Duration'].max()))
+        duration_start,duration_end = st.select_slider("Select the duartion(m):", options=sorted(df['Duration'].unique()), value=(df['Duration'].min(), df['Duration'].max()))
         # Select slider to choose a range for movie votes
         voting_start,voting_end = st.select_slider("Select the voting:", options=sorted(df['Votes'].unique()), value=(df['Votes'].min(), df['Votes'].max()))
         
