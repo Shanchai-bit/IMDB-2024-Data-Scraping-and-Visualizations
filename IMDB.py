@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
 import seaborn as sns 
 import time
+from matplotlib import pyplot as plt
 from sqlalchemy import create_engine
 
 # Attempt to establish a database connection
