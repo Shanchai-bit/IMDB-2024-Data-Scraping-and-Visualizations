@@ -8,6 +8,7 @@ from sqlalchemy import create_engine
 # Attempt to establish a database connection
 # Create an SQLAlchemy engine to connect to the MySQL database
 engine = create_engine("mysql+mysqldb://root:shan@localhost:3306/imdb_2024_genres")#root@localhost:3306
+conn = None
 try:
     # Establish a connection
     conn = engine.connect()
